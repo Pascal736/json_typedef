@@ -15,4 +15,17 @@ defmodule JsonTypedef do
   def hello do
     :world
   end
+
+  def validate(schema, data) do
+  end
+
+  def valid_schema?(schema) do
+  end
 end
+
+# root schema -> Top level schema
+# possible types: ref, type, enum, elemets, properties, values, discriminator, empty
+# optional: metadata, nullable
+#
+# Types: boolean, float32, float64, int8, uint8, int16, uint16, int32, uint32, string, timestamp
+# Only root schemas can have a definitions object
