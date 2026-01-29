@@ -17,6 +17,7 @@ defmodule JsonTypedef do
   end
 
   def validate(schema, data) do
+    # Add 'allow_additional_properties?' mode. Having field: 'additionalProperties': true in the schema turns this mode on.
   end
 
   def valid_schema?(schema) do

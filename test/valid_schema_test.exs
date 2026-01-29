@@ -1,4 +1,4 @@
-defmodule ValidateTest do
+defmodule ValidatSchemaTest do
   use ExUnit.Case
 
   describe "valid_schema?/1" do
