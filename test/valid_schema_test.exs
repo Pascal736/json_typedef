@@ -336,5 +336,61 @@ defmodule ValidatSchemaTest do
 
       assert {:ok, true} == JsonTypedef.valid_schema?(schema)
     end
+
+    test "invalid discriminator mapping schema using type form" do
+      schema = %{
+        "discriminator" => "event_type",
+        "mapping" => %{
+          "foo" => %{"type" => "string"}
+        }
+      }
+
+      assert {:ok, false} == JsonTypedef.valid_schema?(schema)
+    end
+
+    test "invalid discriminator mapping schema using enum form" do
+      schema = %{
+        "discriminator" => "event_type",
+        "mapping" => %{
+          "foo" => %{"enum" => ["A", "B"]}
+        }
+      }
+
+      assert {:ok, false} == JsonTypedef.valid_schema?(schema)
+    end
+  end
+
+  describe "valid_schema?/1 — form exclusivity" do
+    test "invalid schema with both type and enum" do
+      schema = %{
+        "type" => "string",
+        "enum" => ["a", "b"]
+      }
+
+      assert {:ok, false} == JsonTypedef.valid_schema?(schema)
+    end
+
+    test "invalid schema with both ref and properties" do
+      schema = %{
+        "ref" => "foo",
+        "properties" => %{
+          "x" => %{"type" => "string"}
+        }
+      }
+
+      assert {:ok, false} == JsonTypedef.valid_schema?(schema)
+    end
+
+    test "invalid schema with both discriminator and type" do
+      schema = %{
+        "discriminator" => "kind",
+        "mapping" => %{
+          "a" => %{"properties" => %{}}
+        },
+        "type" => "string"
+      }
+
+      assert {:ok, false} == JsonTypedef.valid_schema?(schema)
+    end
   end
 end

@@ -12,6 +12,7 @@ defmodule JsonTypedef do
            "string",
            "timestamp"
          ])
+  @forms ["type", "enum", "ref", "properties", "values", "elements", "discriminator"]
 
   def validate(_schema, _data) do
     # Add 'allow_additional_properties?' mode. Having field: 'additionalProperties': true in the schema turns this mode on.
@@ -59,6 +60,9 @@ defmodule JsonTypedef do
   defp internal_valid_schema?(%{"nullable" => val}, _level, _refs) when not is_boolean(val),
     do: false
 
+  # defp internal_valid_schema?(%{"discriminator" => _, "mapping" => _} = schema, _level, _refs) when map_size(schema) > 2,
+  #   do: false
+
   defp internal_valid_schema?(
          %{"discriminator" => discr, "mapping" => mapping},
          level,
@@ -86,7 +90,12 @@ defmodule JsonTypedef do
             true
         end
 
-      no_nullable? and
+      object_schema? =
+        Map.has_key?(schema, "properties") or
+          Map.has_key?(schema, "optionalProperties")
+
+      object_schema? and
+        no_nullable? and
         no_discriminator_in_props? and
         no_discriminator_in_optional_props? and
         internal_valid_schema?(schema, level, refs)
@@ -107,5 +116,3 @@ defmodule JsonTypedef do
     MapSet.disjoint?(MapSet.new(Map.keys(a)), MapSet.new(Map.keys(b)))
   end
 end
-
-#
