@@ -74,6 +74,21 @@ defmodule ValidatSchemaTest do
       assert {:ok, true} == JsonTypedef.valid_schema?(schema)
     end
 
+    test "valid ref schema with recursion" do
+      schema = %{
+        "definitions" => %{
+          "point" => %{
+            "properties" => %{
+              "next" => %{"ref" => "point"}
+            }
+          }
+        },
+        "ref" => "point"
+      }
+
+      assert {:ok, true} == JsonTypedef.valid_schema?(schema)
+    end
+
     test "invalid ref schema without top-level definitions" do
       schema = %{
         "ref" => "foo"
