@@ -1,7 +1,8 @@
 defmodule ValidateTest do
   use ExUnit.Case
+  alias JsonTypedef.ErrorPath
 
-  describe "validate/2 — additionalProperties" do
+  describe("validate/2 — additionalProperties") do
     test "rejects additional properties by default" do
       schema = %{
         "properties" => %{
@@ -14,8 +15,14 @@ defmodule ValidateTest do
         "b" => "bar"
       }
 
-      # TODO: Check error paths
-      assert {:ok, errors} = JsonTypedef.validate(schema, data)
+      {:error, errors} = JsonTypedef.validate(schema, data)
+
+      assert errors == [
+               %ErrorPath{
+                 instance_path: "/b",
+                 schema_path: "/properties"
+               }
+             ]
     end
 
     test "accepts additional properties when additionalProperties is true" do
