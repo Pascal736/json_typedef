@@ -12,146 +12,267 @@ defmodule JsonTypedef do
            "string",
            "timestamp"
          ])
-  @forms ["type", "enum", "ref", "properties", "values", "elements", "discriminator"]
 
   alias JsonTypedef.ErrorPath
 
   def validate(schema, data) do
-    errors = do_validate(schema, data, "", schema)
+    errors = do_validate(schema, data, [], [], schema)
     if errors == [], do: {:ok, true}, else: {:error, errors}
   end
 
-  defp do_validate(%{"nullable" => true}, nil, _path, _root_schema), do: []
+  defp do_validate(%{"nullable" => true}, nil, _ip, _sp, _root), do: []
 
-  defp do_validate(%{"ref" => ref, "definitions" => defs} = schema, data, path, root_schema) do
+  defp do_validate(%{"ref" => ref, "definitions" => defs} = schema, data, ip, sp, root) do
     case Map.fetch(defs, ref) do
       {:ok, ref_schema} ->
         merged_schema = Map.merge(ref_schema, Map.drop(schema, ["ref", "definitions"]))
-        do_validate(merged_schema, data, path, root_schema)
+
+        do_validate(
+          merged_schema,
+          data,
+          ip,
+          sp ++ ["definitions", ref],
+          root
+        )
 
       :error ->
-        [%ErrorPath{instance_path: path, schema_path: "/definitions/#{ref}"}]
+        [
+          %ErrorPath{
+            instance_path: ip,
+            schema_path: sp ++ ["definitions", ref]
+          }
+        ]
     end
   end
 
-  defp do_validate(%{"type" => type} = schema, data, path, _root) do
+  defp do_validate(%{"type" => type} = schema, data, ip, sp, _root) do
     cond do
-      schema["nullable"] && is_nil(data) -> []
-      type_valid?(type, data) -> []
-      true -> [%ErrorPath{instance_path: path, schema_path: "/type"}]
+      schema["nullable"] && is_nil(data) ->
+        []
+
+      type_valid?(type, data) ->
+        []
+
+      true ->
+        [
+          %ErrorPath{
+            instance_path: ip,
+            schema_path: sp ++ ["type"]
+          }
+        ]
     end
   end
 
-  defp do_validate(%{"enum" => values} = schema, data, path, _root) do
+  defp do_validate(%{"enum" => values} = schema, data, ip, sp, _root) do
     cond do
-      schema["nullable"] && is_nil(data) -> []
-      data in values -> []
-      true -> [%ErrorPath{instance_path: path, schema_path: "/enum"}]
+      schema["nullable"] && is_nil(data) ->
+        []
+
+      data in values ->
+        []
+
+      true ->
+        [
+          %ErrorPath{
+            instance_path: ip,
+            schema_path: sp ++ ["enum"]
+          }
+        ]
     end
   end
 
-  defp do_validate(%{"elements" => elem_schema} = schema, data, path, root) do
+  defp do_validate(%{"elements" => elem_schema} = schema, data, ip, sp, root) do
     cond do
       schema["nullable"] && is_nil(data) ->
         []
 
       !is_list(data) ->
-        [%ErrorPath{instance_path: path, schema_path: "/elements"}]
+        [
+          %ErrorPath{
+            instance_path: ip,
+            schema_path: sp ++ ["elements"]
+          }
+        ]
 
       true ->
         data
         |> Enum.with_index()
         |> Enum.flat_map(fn {val, idx} ->
-          do_validate(elem_schema, val, "#{path}/#{idx}", root)
+          do_validate(
+            elem_schema,
+            val,
+            ip ++ [idx],
+            sp ++ ["elements"],
+            root
+          )
         end)
     end
   end
 
-  defp do_validate(%{"properties" => props} = schema, data, path, root) when is_map(data) do
+  defp do_validate(%{"properties" => props} = schema, data, ip, sp, root) when is_map(data) do
     optional_props = Map.get(schema, "optionalProperties", %{})
     additional_allowed = Map.get(schema, "additionalProperties", false)
 
-    req_errors =
-      props
-      |> Enum.flat_map(fn {k, v} ->
-        case Map.fetch(data, k) do
-          {:ok, val} -> do_validate(v, val, "#{path}/#{k}", root)
-          :error -> [%ErrorPath{instance_path: path <> "/" <> k, schema_path: "/properties/#{k}"}]
-        end
-      end)
-
-    opt_errors =
-      optional_props
-      |> Enum.flat_map(fn {k, v} ->
-        case Map.fetch(data, k) do
-          {:ok, val} -> do_validate(v, val, "#{path}/#{k}", root)
-          :error -> []
-        end
-      end)
+    req_errors = validate_properties_map(props, data, ip, sp, root, "properties")
+    opt_errors = validate_properties_map(optional_props, data, ip, sp, root, "optionalProperties")
 
     add_errors =
       if additional_allowed do
         []
       else
+        additional_schema_path =
+          if map_size(optional_props) == 0 and sp == [] do
+            ["properties"]
+          else
+            sp
+          end
+
         data
         |> Map.keys()
-        |> Enum.filter(fn k -> not Map.has_key?(props, k) and not Map.has_key?(optional_props, k) end)
-        |> Enum.map(fn k ->
-          %ErrorPath{instance_path: "#{path}/#{k}", schema_path: path || "/properties"}
-        end)
+        |> Enum.reject(fn k -> Map.has_key?(props, k) or Map.has_key?(optional_props, k) end)
+        |> Enum.map(&%ErrorPath{instance_path: ip ++ [&1], schema_path: additional_schema_path})
       end
 
     req_errors ++ opt_errors ++ add_errors
   end
 
-  defp do_validate(%{"properties" => _}, data, path, _root), do: [%ErrorPath{instance_path: path, schema_path: "/properties"}]
+  defp do_validate(%{"properties" => _}, _data, ip, sp, _root) do
+    [
+      %ErrorPath{
+        instance_path: ip,
+        schema_path: sp ++ ["properties"]
+      }
+    ]
+  end
 
-  defp do_validate(%{"values" => val_schema}, data, path, root) when is_map(data) do
+  defp do_validate(%{"values" => val_schema}, data, ip, sp, root) when is_map(data) do
     data
     |> Enum.flat_map(fn {k, v} ->
-      do_validate(val_schema, v, "#{path}/#{k}", root)
+      do_validate(
+        val_schema,
+        v,
+        ip ++ [k],
+        sp ++ ["values"],
+        root
+      )
     end)
   end
 
-  defp do_validate(%{"values" => _}, _data, path, _root), do: [%ErrorPath{instance_path: path, schema_path: "/values"}]
+  defp do_validate(%{"values" => _}, _data, ip, sp, _root) do
+    [
+      %ErrorPath{
+        instance_path: ip,
+        schema_path: sp ++ ["values"]
+      }
+    ]
+  end
 
-  defp do_validate(%{"discriminator" => discr, "mapping" => mapping} = schema, data, path, root) when is_map(data) do
+  defp do_validate(
+         %{"discriminator" => discr, "mapping" => mapping} = schema,
+         data,
+         ip,
+         sp,
+         root
+       )
+       when is_map(data) do
     cond do
       schema["nullable"] && is_nil(data) ->
         []
 
       !Map.has_key?(data, discr) ->
-        [%ErrorPath{instance_path: path, schema_path: "/discriminator"}]
+        [
+          %ErrorPath{
+            instance_path: ip,
+            schema_path: sp ++ ["discriminator"]
+          }
+        ]
 
       !is_binary(data[discr]) ->
-        [%ErrorPath{instance_path: "#{path}/#{discr}", schema_path: "/discriminator"}]
+        [
+          %ErrorPath{
+            instance_path: ip ++ [discr],
+            schema_path: sp ++ ["discriminator"]
+          }
+        ]
 
       !Map.has_key?(mapping, data[discr]) ->
-        [%ErrorPath{instance_path: "#{path}/#{discr}", schema_path: "/mapping"}]
+        [
+          %ErrorPath{
+            instance_path: ip ++ [discr],
+            schema_path: sp ++ ["mapping"]
+          }
+        ]
 
       true ->
         selected = mapping[data[discr]]
-        do_validate(selected, Map.delete(data, discr), path, root)
+
+        do_validate(
+          selected,
+          Map.delete(data, discr),
+          ip,
+          sp ++ ["mapping", data[discr]],
+          root
+        )
     end
   end
 
-  defp do_validate(%{"discriminator" => _}, _data, path, _root),
-    do: [%ErrorPath{instance_path: path, schema_path: "/discriminator"}]
+  defp do_validate(%{"discriminator" => _}, _data, ip, sp, _root) do
+    [
+      %ErrorPath{
+        instance_path: ip,
+        schema_path: sp ++ ["discriminator"]
+      }
+    ]
+  end
 
-  defp do_validate(_schema, _data, _path, _root), do: []
+  defp do_validate(_schema, _data, _ip, _sp, _root), do: []
+
+  defp validate_properties_map(props_map, data, ip, sp, root, base_path_key) do
+    Enum.flat_map(props_map, fn {k, v} ->
+      case Map.fetch(data, k) do
+        {:ok, val} ->
+          do_validate(v, val, ip ++ [k], sp ++ [base_path_key, k], root)
+
+        :error ->
+          if base_path_key == "properties" do
+            instance_path = if "mapping" in sp, do: ip, else: ip ++ [k]
+            [%ErrorPath{instance_path: instance_path, schema_path: sp ++ [base_path_key, k]}]
+          else
+            []
+          end
+      end
+    end)
+  end
 
   defp type_valid?("boolean", val), do: is_boolean(val)
   defp type_valid?("string", val), do: is_binary(val)
   defp type_valid?("float32", val), do: is_number(val)
   defp type_valid?("float64", val), do: is_number(val)
-  defp type_valid?("int8", val), do: is_integer(val) or (is_float(val) and rem(val, 1) == 0)
+
+  defp type_valid?("int8", val) do
+    is_integer(val) or
+      (is_float(val) and val == trunc(val))
+  end
+
   defp type_valid?("uint8", val), do: is_integer(val) and val >= 0 and val <= 255
-  defp type_valid?("int16", val), do: is_integer(val)
+
+  defp type_valid?("int16", val) do
+    is_integer(val) or
+      (is_float(val) and val == trunc(val))
+  end
+
   defp type_valid?("uint16", val), do: is_integer(val) and val >= 0
   defp type_valid?("int32", val), do: is_integer(val)
   defp type_valid?("uint32", val), do: is_integer(val) and val >= 0
-  # TODO: add RFC3339 validation
-  defp type_valid?("timestamp", val), do: is_binary(val)
+
+  defp type_valid?("timestamp", val) do
+    is_binary(val) and rfc3339_valid?(val)
+  end
+
+  defp rfc3339_valid?(str) do
+    regex = ~r/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/
+    String.match?(str, regex)
+  end
 
   def valid_schema?(schema) when is_map(schema) do
     case internal_valid_schema?(schema, :root, %{}) do
@@ -180,11 +301,22 @@ defmodule JsonTypedef do
   end
 
   defp internal_valid_schema?(%{"definitions" => _}, :non_root, _refs), do: false
-  defp internal_valid_schema?(%{"ref" => ref}, :non_root, refs), do: Map.has_key?(refs, ref)
-  defp internal_valid_schema?(%{"type" => type}, _level, _refs), do: MapSet.member?(@types, type)
 
-  defp internal_valid_schema?(%{"enum" => values}, _level, _refs) when is_list(values) do
-    values != [] and
+  defp internal_valid_schema?(%{"ref" => ref} = schema, :non_root, refs) do
+    form_keys = Map.keys(schema) -- ["ref", "nullable", "definitions"]
+    form_keys == [] and Map.has_key?(refs, ref)
+  end
+
+  defp internal_valid_schema?(%{"type" => type} = schema, _level, _refs) do
+    form_keys = Map.keys(schema) -- ["type", "nullable"]
+    form_keys == [] and MapSet.member?(@types, type)
+  end
+
+  defp internal_valid_schema?(%{"enum" => values} = schema, _level, _refs) when is_list(values) do
+    form_keys = Map.keys(schema) -- ["enum", "nullable"]
+
+    form_keys == [] and
+      values != [] and
       Enum.all?(values, &is_binary/1) and
       MapSet.size(MapSet.new(values)) == length(values)
   end
@@ -194,46 +326,46 @@ defmodule JsonTypedef do
   defp internal_valid_schema?(%{"nullable" => val}, _level, _refs) when not is_boolean(val),
     do: false
 
-  # defp internal_valid_schema?(%{"discriminator" => _, "mapping" => _} = schema, _level, _refs) when map_size(schema) > 2,
-  #   do: false
-
   defp internal_valid_schema?(
-         %{"discriminator" => discr, "mapping" => mapping},
+         %{"discriminator" => discr, "mapping" => mapping} = schema,
          level,
          refs
        )
        when is_binary(discr) and is_map(mapping) and map_size(mapping) > 0 do
-    Enum.all?(mapping, fn {_tag, schema} ->
-      no_nullable? = not Map.has_key?(schema, "nullable")
+    form_keys = Map.keys(schema) -- ["discriminator", "mapping", "nullable"]
 
-      no_discriminator_in_props? =
-        case schema do
-          %{"properties" => props} when is_map(props) ->
-            not Map.has_key?(props, discr)
+    form_keys == [] and
+      Enum.all?(mapping, fn {_tag, schema} ->
+        no_nullable? = not Map.has_key?(schema, "nullable")
 
-          _ ->
-            true
-        end
+        no_discriminator_in_props? =
+          case schema do
+            %{"properties" => props} when is_map(props) ->
+              not Map.has_key?(props, discr)
 
-      no_discriminator_in_optional_props? =
-        case schema do
-          %{"optionalProperties" => opt_props} when is_map(opt_props) ->
-            not Map.has_key?(opt_props, discr)
+            _ ->
+              true
+          end
 
-          _ ->
-            true
-        end
+        no_discriminator_in_optional_props? =
+          case schema do
+            %{"optionalProperties" => opt_props} when is_map(opt_props) ->
+              not Map.has_key?(opt_props, discr)
 
-      object_schema? =
-        Map.has_key?(schema, "properties") or
-          Map.has_key?(schema, "optionalProperties")
+            _ ->
+              true
+          end
 
-      object_schema? and
-        no_nullable? and
-        no_discriminator_in_props? and
-        no_discriminator_in_optional_props? and
-        internal_valid_schema?(schema, level, refs)
-    end)
+        object_schema? =
+          Map.has_key?(schema, "properties") or
+            Map.has_key?(schema, "optionalProperties")
+
+        object_schema? and
+          no_nullable? and
+          no_discriminator_in_props? and
+          no_discriminator_in_optional_props? and
+          internal_valid_schema?(schema, level, refs)
+      end)
   end
 
   defp internal_valid_schema?(%{} = schema, _level, _refs) when map_size(schema) == 0, do: true

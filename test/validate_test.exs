@@ -19,8 +19,8 @@ defmodule ValidateTest do
 
       assert errors == [
                %ErrorPath{
-                 instance_path: "/b",
-                 schema_path: "/properties"
+                 instance_path: ["b"],
+                 schema_path: ["properties"]
                }
              ]
     end
@@ -63,8 +63,15 @@ defmodule ValidateTest do
       }
 
       assert {:ok, true} == JsonTypedef.validate(schema, valid_data)
-      # TODO: Check error paths
-      assert {:ok, errors} = JsonTypedef.validate(schema, invalid_data)
+
+      assert {:error, errors} = JsonTypedef.validate(schema, invalid_data)
+
+      assert errors == [
+               %JsonTypedef.ErrorPath{
+                 instance_path: ["a", "foo"],
+                 schema_path: ["properties", "a"]
+               }
+             ]
     end
   end
 
@@ -91,9 +98,9 @@ defmodule ValidateTest do
       assert {:error, errors} = JsonTypedef.validate(schema, nil)
 
       assert errors == [
-               %{
-                 "instancePath" => "",
-                 "schemaPath" => "/definitions/a/type"
+               %ErrorPath{
+                 instance_path: [],
+                 schema_path: ["definitions", "a", "type"]
                }
              ]
     end
@@ -135,9 +142,9 @@ defmodule ValidateTest do
       assert {:error, errors} = JsonTypedef.validate(schema, 127)
 
       assert errors == [
-               %{
-                 "instancePath" => "",
-                 "schemaPath" => "/type"
+               %ErrorPath{
+                 instance_path: [],
+                 schema_path: ["type"]
                }
              ]
     end
@@ -151,9 +158,9 @@ defmodule ValidateTest do
       assert {:error, errors} = JsonTypedef.validate(schema, false)
 
       assert errors == [
-               %{
-                 "instancePath" => "",
-                 "schemaPath" => "/type"
+               %ErrorPath{
+                 instance_path: [],
+                 schema_path: ["type"]
                }
              ]
     end
@@ -167,9 +174,9 @@ defmodule ValidateTest do
       assert {:error, errors} = JsonTypedef.validate(schema, false)
 
       assert errors == [
-               %{
-                 "instancePath" => "",
-                 "schemaPath" => "/type"
+               %ErrorPath{
+                 instance_path: [],
+                 schema_path: ["type"]
                }
              ]
     end
@@ -184,16 +191,16 @@ defmodule ValidateTest do
       assert {:error, errors2} = JsonTypedef.validate(schema, false)
 
       assert errors1 == [
-               %{
-                 "instancePath" => "",
-                 "schemaPath" => "/type"
+               %ErrorPath{
+                 instance_path: [],
+                 schema_path: ["type"]
                }
              ]
 
       assert errors2 == [
-               %{
-                 "instancePath" => "",
-                 "schemaPath" => "/type"
+               %ErrorPath{
+                 instance_path: [],
+                 schema_path: ["type"]
                }
              ]
     end
@@ -209,16 +216,16 @@ defmodule ValidateTest do
       assert {:error, errors2} = JsonTypedef.validate(schema, false)
 
       assert errors1 == [
-               %{
-                 "instancePath" => "",
-                 "schemaPath" => "/type"
+               %ErrorPath{
+                 instance_path: [],
+                 schema_path: ["type"]
                }
              ]
 
       assert errors2 == [
-               %{
-                 "instancePath" => "",
-                 "schemaPath" => "/type"
+               %ErrorPath{
+                 instance_path: [],
+                 schema_path: ["type"]
                }
              ]
     end
@@ -235,9 +242,9 @@ defmodule ValidateTest do
       assert {:error, errors} = JsonTypedef.validate(schema, 127)
 
       assert errors == [
-               %{
-                 "instancePath" => "",
-                 "schemaPath" => "/type"
+               %ErrorPath{
+                 instance_path: [],
+                 schema_path: ["type"]
                }
              ]
     end
@@ -258,9 +265,9 @@ defmodule ValidateTest do
       assert {:error, errors3} = JsonTypedef.validate(schema, nil)
 
       expected = [
-        %{
-          "instancePath" => "",
-          "schemaPath" => "/enum"
+        %ErrorPath{
+          instance_path: [],
+          schema_path: ["enum"]
         }
       ]
 
@@ -282,9 +289,9 @@ defmodule ValidateTest do
       assert {:error, errors2} = JsonTypedef.validate(schema, "UNKNOWN")
 
       expected = [
-        %{
-          "instancePath" => "",
-          "schemaPath" => "/enum"
+        %ErrorPath{
+          instance_path: [],
+          schema_path: ["enum"]
         }
       ]
 
@@ -315,9 +322,9 @@ defmodule ValidateTest do
       assert {:error, errors} = JsonTypedef.validate(schema, nil)
 
       assert errors == [
-               %{
-                 "instancePath" => "",
-                 "schemaPath" => "/elements"
+               %ErrorPath{
+                 instance_path: [],
+                 schema_path: ["elements"]
                }
              ]
     end
@@ -334,13 +341,13 @@ defmodule ValidateTest do
       assert {:error, errors} = JsonTypedef.validate(schema, instance)
 
       assert errors == [
-               %{
-                 "instancePath" => "/2",
-                 "schemaPath" => "/elements/type"
+               %ErrorPath{
+                 instance_path: [2],
+                 schema_path: ["elements", "type"]
                },
-               %{
-                 "instancePath" => "/4",
-                 "schemaPath" => "/elements/type"
+               %ErrorPath{
+                 instance_path: [4],
+                 schema_path: ["elements", "type"]
                }
              ]
     end
@@ -361,13 +368,13 @@ defmodule ValidateTest do
                JsonTypedef.validate(schema, [1, 2, "foo", 3, "bar"])
 
       assert errors == [
-               %{
-                 "instancePath" => "/2",
-                 "schemaPath" => "/elements/type"
+               %ErrorPath{
+                 instance_path: [2],
+                 schema_path: ["elements", "type"]
                },
-               %{
-                 "instancePath" => "/4",
-                 "schemaPath" => "/elements/type"
+               %ErrorPath{
+                 instance_path: [4],
+                 schema_path: ["elements", "type"]
                }
              ]
     end
@@ -413,9 +420,9 @@ defmodule ValidateTest do
       assert {:error, errors} = JsonTypedef.validate(schema, nil)
 
       assert errors == [
-               %{
-                 "instancePath" => "",
-                 "schemaPath" => "/properties"
+               %ErrorPath{
+                 instance_path: [],
+                 schema_path: ["properties"]
                }
              ]
     end
@@ -441,21 +448,21 @@ defmodule ValidateTest do
       assert {:error, errors} = JsonTypedef.validate(schema, instance)
 
       assert errors == [
-               %{
-                 "instancePath" => "",
-                 "schemaPath" => "/properties/a"
+               %ErrorPath{
+                 instance_path: ["a"],
+                 schema_path: ["properties", "a"]
                },
-               %{
-                 "instancePath" => "/b",
-                 "schemaPath" => "/properties/b/type"
+               %ErrorPath{
+                 instance_path: ["b"],
+                 schema_path: ["properties", "b", "type"]
                },
-               %{
-                 "instancePath" => "/c",
-                 "schemaPath" => "/optionalProperties/c/type"
+               %ErrorPath{
+                 instance_path: ["c"],
+                 schema_path: ["optionalProperties", "c", "type"]
                },
-               %{
-                 "instancePath" => "/e",
-                 "schemaPath" => ""
+               %ErrorPath{
+                 instance_path: ["e"],
+                 schema_path: []
                }
              ]
     end
@@ -482,17 +489,17 @@ defmodule ValidateTest do
       assert {:error, errors} = JsonTypedef.validate(schema, instance)
 
       assert errors == [
-               %{
-                 "instancePath" => "",
-                 "schemaPath" => "/properties/a"
+               %ErrorPath{
+                 instance_path: ["a"],
+                 schema_path: ["properties", "a"]
                },
-               %{
-                 "instancePath" => "/b",
-                 "schemaPath" => "/properties/b/type"
+               %ErrorPath{
+                 instance_path: ["b"],
+                 schema_path: ["properties", "b", "type"]
                },
-               %{
-                 "instancePath" => "/c",
-                 "schemaPath" => "/optionalProperties/c/type"
+               %ErrorPath{
+                 instance_path: ["c"],
+                 schema_path: ["optionalProperties", "c", "type"]
                }
              ]
     end
@@ -522,17 +529,17 @@ defmodule ValidateTest do
       assert {:error, errors} = JsonTypedef.validate(schema, instance)
 
       assert errors == [
-               %{
-                 "instancePath" => "",
-                 "schemaPath" => "/properties/a"
+               %ErrorPath{
+                 instance_path: ["a"],
+                 schema_path: ["properties", "a"]
                },
-               %{
-                 "instancePath" => "/b",
-                 "schemaPath" => "/properties/b/type"
+               %ErrorPath{
+                 instance_path: ["b"],
+                 schema_path: ["properties", "b", "type"]
                },
-               %{
-                 "instancePath" => "/c",
-                 "schemaPath" => "/optionalProperties/c/type"
+               %ErrorPath{
+                 instance_path: ["c"],
+                 schema_path: ["optionalProperties", "c", "type"]
                }
              ]
     end
@@ -560,9 +567,9 @@ defmodule ValidateTest do
       assert {:error, errors} = JsonTypedef.validate(schema, nil)
 
       assert errors == [
-               %{
-                 "instancePath" => "",
-                 "schemaPath" => "/values"
+               %ErrorPath{
+                 instance_path: [],
+                 schema_path: ["values"]
                }
              ]
     end
@@ -585,13 +592,13 @@ defmodule ValidateTest do
       assert {:error, errors} = JsonTypedef.validate(schema, instance)
 
       assert errors == [
-               %{
-                 "instancePath" => "/c",
-                 "schemaPath" => "/values/type"
+               %ErrorPath{
+                 instance_path: ["c"],
+                 schema_path: ["values", "type"]
                },
-               %{
-                 "instancePath" => "/e",
-                 "schemaPath" => "/values/type"
+               %ErrorPath{
+                 instance_path: ["e"],
+                 schema_path: ["values", "type"]
                }
              ]
     end
@@ -617,13 +624,13 @@ defmodule ValidateTest do
       assert {:error, errors} = JsonTypedef.validate(schema, instance)
 
       assert errors == [
-               %{
-                 "instancePath" => "/c",
-                 "schemaPath" => "/values/type"
+               %ErrorPath{
+                 instance_path: ["c"],
+                 schema_path: ["values", "type"]
                },
-               %{
-                 "instancePath" => "/e",
-                 "schemaPath" => "/values/type"
+               %ErrorPath{
+                 instance_path: ["e"],
+                 schema_path: ["values", "type"]
                }
              ]
     end
@@ -652,9 +659,9 @@ defmodule ValidateTest do
       assert {:error, errors} = JsonTypedef.validate(basic_schema(), nil)
 
       assert errors == [
-               %{
-                 "instancePath" => "",
-                 "schemaPath" => "/discriminator"
+               %ErrorPath{
+                 instance_path: [],
+                 schema_path: ["discriminator"]
                }
              ]
     end
@@ -663,9 +670,9 @@ defmodule ValidateTest do
       assert {:error, errors} = JsonTypedef.validate(basic_schema(), %{})
 
       assert errors == [
-               %{
-                 "instancePath" => "",
-                 "schemaPath" => "/discriminator"
+               %ErrorPath{
+                 instance_path: [],
+                 schema_path: ["discriminator"]
                }
              ]
     end
@@ -675,9 +682,9 @@ defmodule ValidateTest do
                JsonTypedef.validate(basic_schema(), %{"version" => 1})
 
       assert errors == [
-               %{
-                 "instancePath" => "/version",
-                 "schemaPath" => "/discriminator"
+               %ErrorPath{
+                 instance_path: ["version"],
+                 schema_path: ["discriminator"]
                }
              ]
     end
@@ -687,9 +694,9 @@ defmodule ValidateTest do
                JsonTypedef.validate(basic_schema(), %{"version" => "v3"})
 
       assert errors == [
-               %{
-                 "instancePath" => "/version",
-                 "schemaPath" => "/mapping"
+               %ErrorPath{
+                 instance_path: ["version"],
+                 schema_path: ["mapping"]
                }
              ]
     end
@@ -702,9 +709,9 @@ defmodule ValidateTest do
                )
 
       assert errors == [
-               %{
-                 "instancePath" => "/a",
-                 "schemaPath" => "/mapping/v2/properties/a/type"
+               %ErrorPath{
+                 instance_path: ["a"],
+                 schema_path: ["mapping", "v2", "properties", "a", "type"]
                }
              ]
     end
@@ -785,9 +792,9 @@ defmodule ValidateTest do
                JsonTypedef.validate(event_schema(), %{})
 
       assert errors == [
-               %{
-                 "instancePath" => "",
-                 "schemaPath" => "/discriminator"
+               %ErrorPath{
+                 instance_path: [],
+                 schema_path: ["discriminator"]
                }
              ]
     end
@@ -800,9 +807,9 @@ defmodule ValidateTest do
                )
 
       assert errors == [
-               %{
-                 "instancePath" => "/event_type",
-                 "schemaPath" => "/mapping"
+               %ErrorPath{
+                 instance_path: ["event_type"],
+                 schema_path: ["mapping"]
                }
              ]
     end
@@ -815,9 +822,9 @@ defmodule ValidateTest do
                )
 
       assert errors == [
-               %{
-                 "instancePath" => "",
-                 "schemaPath" => "/mapping/account_deleted/properties/account_id"
+               %ErrorPath{
+                 instance_path: [],
+                 schema_path: ["mapping", "account_deleted", "properties", "account_id"]
                }
              ]
     end
@@ -835,9 +842,9 @@ defmodule ValidateTest do
                )
 
       assert errors == [
-               %{
-                 "instancePath" => "/xxx",
-                 "schemaPath" => "/mapping/account_payment_plan_changed"
+               %ErrorPath{
+                 instance_path: ["xxx"],
+                 schema_path: ["mapping", "account_payment_plan_changed"]
                }
              ]
     end
