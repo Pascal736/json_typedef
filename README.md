@@ -18,3 +18,38 @@ def deps do
   ]
 end
 ```
+
+## Quick Start
+
+```elixir
+iex> schema = %{
+...>   "properties" => %{
+...>     "name" => %{"type" => "string"},
+...>     "age" => %{"type" => "uint32"},
+...>     "phones" => %{
+...>       "elements" => %{
+...>         "type" => "string"
+...>       }
+...>     }
+...>   }
+...> }
+iex>
+iex> {:ok, true} = Typedef.valid_schema?(schema)
+iex>
+iex> Typedef.validate(schema, %{
+...>   "name" => "John Doe",
+...>   "age" => 43,
+...>   "phones" => ["+44 1234567", "+44 2345678"]
+...> })
+{:ok, true}
+iex>
+iex> # Invalid data returns error paths showing what failed
+iex> {:error, errors} = Typedef.validate(schema, %{
+...>   "age" => "43",
+...>   "phones" => ["+44 1234567", 999]
+...> })
+iex> errors
+[%Typedef.ErrorPath{instance_path: ["age"], schema_path: ["properties", "age", "type"]}, %Typedef.ErrorPath{instance_path: ["name"], schema_path: ["properties", "name"]}, %Typedef.ErrorPath{instance_path: ["phones", 1], schema_path: ["properties", "phones", "elements", "type"]}]
+```
+
+
