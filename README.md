@@ -43,7 +43,6 @@ iex> Typedef.validate(schema, %{
 ...> })
 {:ok, true}
 iex>
-iex> # Invalid data returns error paths showing what failed
 iex> {:error, errors} = Typedef.validate(schema, %{
 ...>   "age" => "43",
 ...>   "phones" => ["+44 1234567", 999]
