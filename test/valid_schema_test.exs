@@ -1,10 +1,10 @@
-defmodule ValidatSchemaTest do
+defmodule TypedefTest.ValidatSchemaTest do
   use ExUnit.Case
 
   describe "valid_schema?/1" do
     test "valid root schema with definition" do
       schema = %{"definitions" => %{}}
-      assert {:ok, true} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, true} == Typedef.valid_schema?(schema)
     end
 
     test "invalid root schema with nested definition" do
@@ -16,14 +16,14 @@ defmodule ValidatSchemaTest do
         }
       }
 
-      assert {:ok, false} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, false} == Typedef.valid_schema?(schema)
     end
   end
 
   describe "valid_schema?/1 — empty form" do
     test "valid empty schema" do
       schema = %{}
-      assert {:ok, true} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, true} == Typedef.valid_schema?(schema)
     end
 
     test "valid empty schema with nullable true" do
@@ -31,7 +31,7 @@ defmodule ValidatSchemaTest do
         "nullable" => true
       }
 
-      assert {:ok, true} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, true} == Typedef.valid_schema?(schema)
     end
 
     test "valid empty schema with nullable and metadata" do
@@ -42,7 +42,7 @@ defmodule ValidatSchemaTest do
         }
       }
 
-      assert {:ok, true} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, true} == Typedef.valid_schema?(schema)
     end
 
     test "invalid empty schema with non-boolean nullable" do
@@ -50,7 +50,7 @@ defmodule ValidatSchemaTest do
         "nullable" => "foo"
       }
 
-      assert {:ok, false} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, false} == Typedef.valid_schema?(schema)
     end
   end
 
@@ -71,7 +71,7 @@ defmodule ValidatSchemaTest do
         }
       }
 
-      assert {:ok, true} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, true} == Typedef.valid_schema?(schema)
     end
 
     test "valid ref schema with recursion" do
@@ -86,7 +86,7 @@ defmodule ValidatSchemaTest do
         "ref" => "point"
       }
 
-      assert {:ok, true} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, true} == Typedef.valid_schema?(schema)
     end
 
     test "invalid ref schema without top-level definitions" do
@@ -94,7 +94,7 @@ defmodule ValidatSchemaTest do
         "ref" => "foo"
       }
 
-      assert {:ok, false} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, false} == Typedef.valid_schema?(schema)
     end
 
     test "invalid ref schema with missing referenced definition" do
@@ -105,7 +105,7 @@ defmodule ValidatSchemaTest do
         "ref" => "bar"
       }
 
-      assert {:ok, false} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, false} == Typedef.valid_schema?(schema)
     end
   end
 
@@ -115,7 +115,7 @@ defmodule ValidatSchemaTest do
         "type" => "uint8"
       }
 
-      assert {:ok, true} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, true} == Typedef.valid_schema?(schema)
     end
 
     test "invalid type schema with non-string type" do
@@ -123,7 +123,7 @@ defmodule ValidatSchemaTest do
         "type" => true
       }
 
-      assert {:ok, false} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, false} == Typedef.valid_schema?(schema)
     end
 
     test "invalid type schema with unknown type" do
@@ -131,7 +131,7 @@ defmodule ValidatSchemaTest do
         "type" => "foo"
       }
 
-      assert {:ok, false} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, false} == Typedef.valid_schema?(schema)
     end
   end
 
@@ -141,7 +141,7 @@ defmodule ValidatSchemaTest do
         "enum" => ["PENDING", "IN_PROGRESS", "DONE"]
       }
 
-      assert {:ok, true} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, true} == Typedef.valid_schema?(schema)
     end
 
     test "invalid enum schema with empty array" do
@@ -149,7 +149,7 @@ defmodule ValidatSchemaTest do
         "enum" => []
       }
 
-      assert {:ok, false} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, false} == Typedef.valid_schema?(schema)
     end
 
     test "invalid enum schema with duplicate values by RFC8259 string equality" do
@@ -157,7 +157,7 @@ defmodule ValidatSchemaTest do
         "enum" => ["a\\b", "a\u005Cb"]
       }
 
-      assert {:ok, false} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, false} == Typedef.valid_schema?(schema)
     end
 
     test "invalid enum schema with non-string value" do
@@ -165,7 +165,7 @@ defmodule ValidatSchemaTest do
         "enum" => ["OK", 1]
       }
 
-      assert {:ok, false} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, false} == Typedef.valid_schema?(schema)
     end
   end
 
@@ -177,7 +177,7 @@ defmodule ValidatSchemaTest do
         }
       }
 
-      assert {:ok, true} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, true} == Typedef.valid_schema?(schema)
     end
 
     test "invalid elements schema with non-schema value" do
@@ -185,7 +185,7 @@ defmodule ValidatSchemaTest do
         "elements" => true
       }
 
-      assert {:ok, false} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, false} == Typedef.valid_schema?(schema)
     end
 
     test "invalid elements schema with invalid subschema" do
@@ -195,7 +195,7 @@ defmodule ValidatSchemaTest do
         }
       }
 
-      assert {:ok, false} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, false} == Typedef.valid_schema?(schema)
     end
   end
 
@@ -210,7 +210,7 @@ defmodule ValidatSchemaTest do
         }
       }
 
-      assert {:ok, false} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, false} == Typedef.valid_schema?(schema)
     end
 
     test "valid properties schema with disjoint required and optional properties" do
@@ -232,7 +232,7 @@ defmodule ValidatSchemaTest do
         }
       }
 
-      assert {:ok, true} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, true} == Typedef.valid_schema?(schema)
     end
   end
 
@@ -244,7 +244,7 @@ defmodule ValidatSchemaTest do
         }
       }
 
-      assert {:ok, true} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, true} == Typedef.valid_schema?(schema)
     end
 
     test "invalid values schema with non-schema value" do
@@ -252,7 +252,7 @@ defmodule ValidatSchemaTest do
         "values" => true
       }
 
-      assert {:ok, false} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, false} == Typedef.valid_schema?(schema)
     end
 
     test "invalid values schema with invalid subschema" do
@@ -262,7 +262,7 @@ defmodule ValidatSchemaTest do
         }
       }
 
-      assert {:ok, false} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, false} == Typedef.valid_schema?(schema)
     end
   end
 
@@ -280,7 +280,7 @@ defmodule ValidatSchemaTest do
         }
       }
 
-      assert {:ok, false} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, false} == Typedef.valid_schema?(schema)
     end
 
     test "invalid discriminator schema redefining discriminator in properties" do
@@ -295,7 +295,7 @@ defmodule ValidatSchemaTest do
         }
       }
 
-      assert {:ok, false} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, false} == Typedef.valid_schema?(schema)
     end
 
     test "invalid discriminator schema redefining discriminator in optionalProperties" do
@@ -310,7 +310,7 @@ defmodule ValidatSchemaTest do
         }
       }
 
-      assert {:ok, false} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, false} == Typedef.valid_schema?(schema)
     end
 
     test "valid discriminator schema with disjoint properties and no nullable in mapping" do
@@ -334,7 +334,7 @@ defmodule ValidatSchemaTest do
         }
       }
 
-      assert {:ok, true} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, true} == Typedef.valid_schema?(schema)
     end
 
     test "invalid discriminator mapping schema using type form" do
@@ -345,7 +345,7 @@ defmodule ValidatSchemaTest do
         }
       }
 
-      assert {:ok, false} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, false} == Typedef.valid_schema?(schema)
     end
 
     test "invalid discriminator mapping schema using enum form" do
@@ -356,7 +356,7 @@ defmodule ValidatSchemaTest do
         }
       }
 
-      assert {:ok, false} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, false} == Typedef.valid_schema?(schema)
     end
   end
 
@@ -367,7 +367,7 @@ defmodule ValidatSchemaTest do
         "enum" => ["a", "b"]
       }
 
-      assert {:ok, false} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, false} == Typedef.valid_schema?(schema)
     end
 
     test "invalid schema with both ref and properties" do
@@ -378,7 +378,7 @@ defmodule ValidatSchemaTest do
         }
       }
 
-      assert {:ok, false} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, false} == Typedef.valid_schema?(schema)
     end
 
     test "invalid schema with both discriminator and type" do
@@ -390,7 +390,7 @@ defmodule ValidatSchemaTest do
         "type" => "string"
       }
 
-      assert {:ok, false} == JsonTypedef.valid_schema?(schema)
+      assert {:ok, false} == Typedef.valid_schema?(schema)
     end
   end
 end

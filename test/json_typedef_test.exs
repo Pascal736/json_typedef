@@ -1,4 +1,4 @@
-defmodule JsonTypedefTest do
+defmodule TypedefTest do
   use ExUnit.Case
-  doctest JsonTypedef
+  doctest Typedef
 end
