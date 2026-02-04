@@ -1,6 +1,6 @@
-defmodule ValidateTest do
+defmodule TypedefTest.ValidateTest do
   use ExUnit.Case
-  alias JsonTypedef.ErrorPath
+  alias Typedef.ErrorPath
 
   describe("validate/2 — additionalProperties") do
     test "rejects additional properties by default" do
@@ -15,7 +15,7 @@ defmodule ValidateTest do
         "b" => "bar"
       }
 
-      {:error, errors} = JsonTypedef.validate(schema, data)
+      {:error, errors} = Typedef.validate(schema, data)
 
       assert errors == [
                %ErrorPath{
@@ -38,7 +38,7 @@ defmodule ValidateTest do
         "b" => "bar"
       }
 
-      assert {:ok, true} == JsonTypedef.validate(schema, data)
+      assert {:ok, true} == Typedef.validate(schema, data)
     end
 
     test "additionalProperties is not inherited by subschemas" do
@@ -62,12 +62,12 @@ defmodule ValidateTest do
         "a" => %{"b" => "c", "foo" => "bar"}
       }
 
-      assert {:ok, true} == JsonTypedef.validate(schema, valid_data)
+      assert {:ok, true} == Typedef.validate(schema, valid_data)
 
-      assert {:error, errors} = JsonTypedef.validate(schema, invalid_data)
+      assert {:error, errors} = Typedef.validate(schema, invalid_data)
 
       assert errors == [
-               %JsonTypedef.ErrorPath{
+               %Typedef.ErrorPath{
                  instance_path: ["a", "foo"],
                  schema_path: ["properties", "a"]
                }
@@ -84,7 +84,7 @@ defmodule ValidateTest do
         "ref" => "a"
       }
 
-      assert {:ok, true} == JsonTypedef.validate(schema, 123)
+      assert {:ok, true} == Typedef.validate(schema, 123)
     end
 
     test "ref rejects null and returns errors from referenced schema" do
@@ -95,7 +95,7 @@ defmodule ValidateTest do
         "ref" => "a"
       }
 
-      assert {:error, errors} = JsonTypedef.validate(schema, nil)
+      assert {:error, errors} = Typedef.validate(schema, nil)
 
       assert errors == [
                %ErrorPath{
@@ -114,7 +114,7 @@ defmodule ValidateTest do
         "nullable" => true
       }
 
-      assert {:ok, true} == JsonTypedef.validate(schema, nil)
+      assert {:ok, true} == Typedef.validate(schema, nil)
     end
 
     test "nullable false in referenced schema does not override nullable true on ref" do
@@ -129,7 +129,7 @@ defmodule ValidateTest do
         "nullable" => true
       }
 
-      assert {:ok, true} == JsonTypedef.validate(schema, nil)
+      assert {:ok, true} == Typedef.validate(schema, nil)
     end
   end
 
@@ -137,9 +137,9 @@ defmodule ValidateTest do
     test "boolean type accepts booleans and rejects others" do
       schema = %{"type" => "boolean"}
 
-      assert {:ok, true} == JsonTypedef.validate(schema, false)
+      assert {:ok, true} == Typedef.validate(schema, false)
 
-      assert {:error, errors} = JsonTypedef.validate(schema, 127)
+      assert {:error, errors} = Typedef.validate(schema, 127)
 
       assert errors == [
                %ErrorPath{
@@ -152,10 +152,10 @@ defmodule ValidateTest do
     test "float32 type accepts numbers and rejects non-numbers" do
       schema = %{"type" => "float32"}
 
-      assert {:ok, true} == JsonTypedef.validate(schema, 10.5)
-      assert {:ok, true} == JsonTypedef.validate(schema, 127)
+      assert {:ok, true} == Typedef.validate(schema, 10.5)
+      assert {:ok, true} == Typedef.validate(schema, 127)
 
-      assert {:error, errors} = JsonTypedef.validate(schema, false)
+      assert {:error, errors} = Typedef.validate(schema, false)
 
       assert errors == [
                %ErrorPath{
@@ -168,10 +168,10 @@ defmodule ValidateTest do
     test "string type accepts strings and rejects non-strings" do
       schema = %{"type" => "string"}
 
-      assert {:ok, true} == JsonTypedef.validate(schema, "foo")
-      assert {:ok, true} == JsonTypedef.validate(schema, "1985-04-12T23:20:50.52Z")
+      assert {:ok, true} == Typedef.validate(schema, "foo")
+      assert {:ok, true} == Typedef.validate(schema, "1985-04-12T23:20:50.52Z")
 
-      assert {:error, errors} = JsonTypedef.validate(schema, false)
+      assert {:error, errors} = Typedef.validate(schema, false)
 
       assert errors == [
                %ErrorPath{
@@ -185,10 +185,10 @@ defmodule ValidateTest do
       schema = %{"type" => "timestamp"}
 
       assert {:ok, true} ==
-               JsonTypedef.validate(schema, "1985-04-12T23:20:50.52Z")
+               Typedef.validate(schema, "1985-04-12T23:20:50.52Z")
 
-      assert {:error, errors1} = JsonTypedef.validate(schema, "foo")
-      assert {:error, errors2} = JsonTypedef.validate(schema, false)
+      assert {:error, errors1} = Typedef.validate(schema, "foo")
+      assert {:error, errors2} = Typedef.validate(schema, false)
 
       assert errors1 == [
                %ErrorPath{
@@ -208,12 +208,12 @@ defmodule ValidateTest do
     test "int8 type accepts integers with zero fractional part in range" do
       schema = %{"type" => "int8"}
 
-      assert {:ok, true} == JsonTypedef.validate(schema, 10)
-      assert {:ok, true} == JsonTypedef.validate(schema, 10.0)
-      assert {:ok, true} == JsonTypedef.validate(schema, 1.0e1)
+      assert {:ok, true} == Typedef.validate(schema, 10)
+      assert {:ok, true} == Typedef.validate(schema, 10.0)
+      assert {:ok, true} == Typedef.validate(schema, 1.0e1)
 
-      assert {:error, errors1} = JsonTypedef.validate(schema, 10.5)
-      assert {:error, errors2} = JsonTypedef.validate(schema, false)
+      assert {:error, errors1} = Typedef.validate(schema, 10.5)
+      assert {:error, errors2} = Typedef.validate(schema, false)
 
       assert errors1 == [
                %ErrorPath{
@@ -236,10 +236,10 @@ defmodule ValidateTest do
         "nullable" => true
       }
 
-      assert {:ok, true} == JsonTypedef.validate(schema, nil)
-      assert {:ok, true} == JsonTypedef.validate(schema, false)
+      assert {:ok, true} == Typedef.validate(schema, nil)
+      assert {:ok, true} == Typedef.validate(schema, false)
 
-      assert {:error, errors} = JsonTypedef.validate(schema, 127)
+      assert {:error, errors} = Typedef.validate(schema, 127)
 
       assert errors == [
                %ErrorPath{
@@ -256,13 +256,13 @@ defmodule ValidateTest do
         "enum" => ["PENDING", "DONE", "CANCELED"]
       }
 
-      assert {:ok, true} == JsonTypedef.validate(schema, "PENDING")
-      assert {:ok, true} == JsonTypedef.validate(schema, "DONE")
-      assert {:ok, true} == JsonTypedef.validate(schema, "CANCELED")
+      assert {:ok, true} == Typedef.validate(schema, "PENDING")
+      assert {:ok, true} == Typedef.validate(schema, "DONE")
+      assert {:ok, true} == Typedef.validate(schema, "CANCELED")
 
-      assert {:error, errors1} = JsonTypedef.validate(schema, 0)
-      assert {:error, errors2} = JsonTypedef.validate(schema, "UNKNOWN")
-      assert {:error, errors3} = JsonTypedef.validate(schema, nil)
+      assert {:error, errors1} = Typedef.validate(schema, 0)
+      assert {:error, errors2} = Typedef.validate(schema, "UNKNOWN")
+      assert {:error, errors3} = Typedef.validate(schema, nil)
 
       expected = [
         %ErrorPath{
@@ -282,11 +282,11 @@ defmodule ValidateTest do
         "nullable" => true
       }
 
-      assert {:ok, true} == JsonTypedef.validate(schema, "PENDING")
-      assert {:ok, true} == JsonTypedef.validate(schema, nil)
+      assert {:ok, true} == Typedef.validate(schema, "PENDING")
+      assert {:ok, true} == Typedef.validate(schema, nil)
 
-      assert {:error, errors1} = JsonTypedef.validate(schema, 1)
-      assert {:error, errors2} = JsonTypedef.validate(schema, "UNKNOWN")
+      assert {:error, errors1} = Typedef.validate(schema, 1)
+      assert {:error, errors2} = Typedef.validate(schema, "UNKNOWN")
 
       expected = [
         %ErrorPath{
@@ -308,8 +308,8 @@ defmodule ValidateTest do
         }
       }
 
-      assert {:ok, true} == JsonTypedef.validate(schema, [])
-      assert {:ok, true} == JsonTypedef.validate(schema, [1, 2, 3])
+      assert {:ok, true} == Typedef.validate(schema, [])
+      assert {:ok, true} == Typedef.validate(schema, [1, 2, 3])
     end
 
     test "elements rejects non-array instances" do
@@ -319,7 +319,7 @@ defmodule ValidateTest do
         }
       }
 
-      assert {:error, errors} = JsonTypedef.validate(schema, nil)
+      assert {:error, errors} = Typedef.validate(schema, nil)
 
       assert errors == [
                %ErrorPath{
@@ -338,7 +338,7 @@ defmodule ValidateTest do
 
       instance = [1, 2, "foo", 3, "bar"]
 
-      assert {:error, errors} = JsonTypedef.validate(schema, instance)
+      assert {:error, errors} = Typedef.validate(schema, instance)
 
       assert errors == [
                %ErrorPath{
@@ -360,12 +360,12 @@ defmodule ValidateTest do
         "nullable" => true
       }
 
-      assert {:ok, true} == JsonTypedef.validate(schema, nil)
-      assert {:ok, true} == JsonTypedef.validate(schema, [])
-      assert {:ok, true} == JsonTypedef.validate(schema, [1, 2, 3])
+      assert {:ok, true} == Typedef.validate(schema, nil)
+      assert {:ok, true} == Typedef.validate(schema, [])
+      assert {:ok, true} == Typedef.validate(schema, [1, 2, 3])
 
       assert {:error, errors} =
-               JsonTypedef.validate(schema, [1, 2, "foo", 3, "bar"])
+               Typedef.validate(schema, [1, 2, "foo", 3, "bar"])
 
       assert errors == [
                %ErrorPath{
@@ -393,13 +393,13 @@ defmodule ValidateTest do
         }
       }
 
-      assert {:ok, true} == JsonTypedef.validate(schema, %{"a" => "foo", "b" => "bar"})
+      assert {:ok, true} == Typedef.validate(schema, %{"a" => "foo", "b" => "bar"})
 
       assert {:ok, true} ==
-               JsonTypedef.validate(schema, %{"a" => "foo", "b" => "bar", "c" => "baz"})
+               Typedef.validate(schema, %{"a" => "foo", "b" => "bar", "c" => "baz"})
 
       assert {:ok, true} ==
-               JsonTypedef.validate(schema, %{
+               Typedef.validate(schema, %{
                  "a" => "foo",
                  "b" => "bar",
                  "c" => "baz",
@@ -407,7 +407,7 @@ defmodule ValidateTest do
                })
 
       assert {:ok, true} ==
-               JsonTypedef.validate(schema, %{"a" => "foo", "b" => "bar", "d" => "quux"})
+               Typedef.validate(schema, %{"a" => "foo", "b" => "bar", "d" => "quux"})
     end
 
     test "rejects non-object instance" do
@@ -417,7 +417,7 @@ defmodule ValidateTest do
         }
       }
 
-      assert {:error, errors} = JsonTypedef.validate(schema, nil)
+      assert {:error, errors} = Typedef.validate(schema, nil)
 
       assert errors == [
                %ErrorPath{
@@ -445,7 +445,7 @@ defmodule ValidateTest do
         "e" => 3
       }
 
-      assert {:error, errors} = JsonTypedef.validate(schema, instance)
+      assert {:error, errors} = Typedef.validate(schema, instance)
 
       assert errors == [
                %ErrorPath{
@@ -486,7 +486,7 @@ defmodule ValidateTest do
         "e" => 3
       }
 
-      assert {:error, errors} = JsonTypedef.validate(schema, instance)
+      assert {:error, errors} = Typedef.validate(schema, instance)
 
       assert errors == [
                %ErrorPath{
@@ -518,7 +518,7 @@ defmodule ValidateTest do
         "additionalProperties" => true
       }
 
-      assert {:ok, true} == JsonTypedef.validate(schema, nil)
+      assert {:ok, true} == Typedef.validate(schema, nil)
 
       instance = %{
         "b" => 3,
@@ -526,7 +526,7 @@ defmodule ValidateTest do
         "e" => 3
       }
 
-      assert {:error, errors} = JsonTypedef.validate(schema, instance)
+      assert {:error, errors} = Typedef.validate(schema, instance)
 
       assert errors == [
                %ErrorPath{
@@ -553,8 +553,8 @@ defmodule ValidateTest do
         }
       }
 
-      assert {:ok, true} == JsonTypedef.validate(schema, %{})
-      assert {:ok, true} == JsonTypedef.validate(schema, %{"a" => 1, "b" => 2})
+      assert {:ok, true} == Typedef.validate(schema, %{})
+      assert {:ok, true} == Typedef.validate(schema, %{"a" => 1, "b" => 2})
     end
 
     test "rejects non-object instances" do
@@ -564,7 +564,7 @@ defmodule ValidateTest do
         }
       }
 
-      assert {:error, errors} = JsonTypedef.validate(schema, nil)
+      assert {:error, errors} = Typedef.validate(schema, nil)
 
       assert errors == [
                %ErrorPath{
@@ -589,7 +589,7 @@ defmodule ValidateTest do
         "e" => "bar"
       }
 
-      assert {:error, errors} = JsonTypedef.validate(schema, instance)
+      assert {:error, errors} = Typedef.validate(schema, instance)
 
       assert errors == [
                %ErrorPath{
@@ -611,7 +611,7 @@ defmodule ValidateTest do
         }
       }
 
-      assert {:ok, true} == JsonTypedef.validate(schema, nil)
+      assert {:ok, true} == Typedef.validate(schema, nil)
 
       instance = %{
         "a" => 1,
@@ -621,7 +621,7 @@ defmodule ValidateTest do
         "e" => "bar"
       }
 
-      assert {:error, errors} = JsonTypedef.validate(schema, instance)
+      assert {:error, errors} = Typedef.validate(schema, instance)
 
       assert errors == [
                %ErrorPath{
@@ -656,7 +656,7 @@ defmodule ValidateTest do
     end
 
     test "rejects non-object instance" do
-      assert {:error, errors} = JsonTypedef.validate(basic_schema(), nil)
+      assert {:error, errors} = Typedef.validate(basic_schema(), nil)
 
       assert errors == [
                %ErrorPath{
@@ -667,7 +667,7 @@ defmodule ValidateTest do
     end
 
     test "rejects object missing discriminator tag" do
-      assert {:error, errors} = JsonTypedef.validate(basic_schema(), %{})
+      assert {:error, errors} = Typedef.validate(basic_schema(), %{})
 
       assert errors == [
                %ErrorPath{
@@ -679,7 +679,7 @@ defmodule ValidateTest do
 
     test "rejects discriminator tag with non-string value" do
       assert {:error, errors} =
-               JsonTypedef.validate(basic_schema(), %{"version" => 1})
+               Typedef.validate(basic_schema(), %{"version" => 1})
 
       assert errors == [
                %ErrorPath{
@@ -691,7 +691,7 @@ defmodule ValidateTest do
 
     test "rejects discriminator value not present in mapping" do
       assert {:error, errors} =
-               JsonTypedef.validate(basic_schema(), %{"version" => "v3"})
+               Typedef.validate(basic_schema(), %{"version" => "v3"})
 
       assert errors == [
                %ErrorPath{
@@ -703,7 +703,7 @@ defmodule ValidateTest do
 
     test "rejects instance that does not satisfy selected mapping schema" do
       assert {:error, errors} =
-               JsonTypedef.validate(
+               Typedef.validate(
                  basic_schema(),
                  %{"version" => "v2", "a" => 3}
                )
@@ -718,7 +718,7 @@ defmodule ValidateTest do
 
     test "accepts valid instance and applies discriminator tag exemption" do
       assert {:ok, true} =
-               JsonTypedef.validate(
+               Typedef.validate(
                  basic_schema(),
                  %{"version" => "v2", "a" => "foo"}
                )
@@ -729,7 +729,7 @@ defmodule ValidateTest do
         basic_schema()
         |> Map.put("nullable", true)
 
-      assert {:ok, true} == JsonTypedef.validate(schema, nil)
+      assert {:ok, true} == Typedef.validate(schema, nil)
     end
   end
 
@@ -760,13 +760,13 @@ defmodule ValidateTest do
 
     test "accepts valid discriminator variants" do
       assert {:ok, true} =
-               JsonTypedef.validate(
+               Typedef.validate(
                  event_schema(),
                  %{"event_type" => "account_deleted", "account_id" => "abc-123"}
                )
 
       assert {:ok, true} =
-               JsonTypedef.validate(
+               Typedef.validate(
                  event_schema(),
                  %{
                    "event_type" => "account_payment_plan_changed",
@@ -776,7 +776,7 @@ defmodule ValidateTest do
                )
 
       assert {:ok, true} =
-               JsonTypedef.validate(
+               Typedef.validate(
                  event_schema(),
                  %{
                    "event_type" => "account_payment_plan_changed",
@@ -789,7 +789,7 @@ defmodule ValidateTest do
 
     test "rejects missing discriminator tag" do
       assert {:error, errors} =
-               JsonTypedef.validate(event_schema(), %{})
+               Typedef.validate(event_schema(), %{})
 
       assert errors == [
                %ErrorPath{
@@ -801,7 +801,7 @@ defmodule ValidateTest do
 
     test "rejects unknown discriminator value" do
       assert {:error, errors} =
-               JsonTypedef.validate(
+               Typedef.validate(
                  event_schema(),
                  %{"event_type" => "some_other_event_type"}
                )
@@ -816,7 +816,7 @@ defmodule ValidateTest do
 
     test "rejects missing required property in selected mapping" do
       assert {:error, errors} =
-               JsonTypedef.validate(
+               Typedef.validate(
                  event_schema(),
                  %{"event_type" => "account_deleted"}
                )
@@ -831,7 +831,7 @@ defmodule ValidateTest do
 
     test "rejects additional properties when not allowed (except discriminator)" do
       assert {:error, errors} =
-               JsonTypedef.validate(
+               Typedef.validate(
                  event_schema(),
                  %{
                    "event_type" => "account_payment_plan_changed",

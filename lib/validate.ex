@@ -1,5 +1,5 @@
-defmodule JsonTypedef.Validate do
-  alias JsonTypedef.ErrorPath
+defmodule Typedef.Validate do
+  alias Typedef.ErrorPath
 
   @spec validate(map(), term()) :: {:ok, true} | {:error, [ErrorPath.t()]}
   def validate(schema, data) do

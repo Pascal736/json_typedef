@@ -1,4 +1,4 @@
-defmodule JsonTypedef.ValidSchema do
+defmodule Typedef.ValidSchema do
   @types MapSet.new([
            "boolean",
            "float32",

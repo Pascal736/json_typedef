@@ -1,4 +1,4 @@
-defmodule JsonTypedef.ErrorPath do
+defmodule Typedef.ErrorPath do
   @enforce_keys [:instance_path, :schema_path]
   defstruct instance_path: [], schema_path: []
 
