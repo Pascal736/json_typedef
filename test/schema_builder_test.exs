@@ -53,4 +53,16 @@ defmodule TypedefTest.SchemaTest do
              }
     end
   end
+
+  describe "nested properties" do
+    test "add property to property" do
+      schema = Schema.new()
+      node_property = Property.simple("firstName", "string")
+      property = Property.property("nestedNode", node_property)
+
+      schema = schema |> Schema.add(property) |> Schema.to_map()
+
+      assert schema == %{"properties" => %{"nestedNode" => %{"firstName" => %{"type" => "string"}}}}
+    end
+  end
 end

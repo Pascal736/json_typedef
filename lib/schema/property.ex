@@ -13,6 +13,10 @@ defmodule Typedef.Property do
     %__MODULE__{name: name, value: %Elements{type: type}}
   end
 
+  def property(name, %__MODULE__{} = property) when is_binary(name) do
+    %__MODULE__{name: name, value: property}
+  end
+
   def to_map(%__MODULE__{} = property, acc \\ %{}) do
     parse_property(property, acc)
   end
@@ -23,5 +27,9 @@ defmodule Typedef.Property do
 
   defp parse_property(%__MODULE__{name: name, value: %Elements{type: type}}, acc) do
     Map.put(acc, name, %{"elements" => %{"type" => type}})
+  end
+
+  defp parse_property(%__MODULE__{name: name, value: %__MODULE__{} = prop}, acc) do
+    Map.put(acc, name, parse_property(prop, acc))
   end
 end
