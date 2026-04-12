@@ -1,10 +1,10 @@
 defmodule TypedefTest.SchemaTest do
   use ExUnit.Case
-  alias Typedef.Schema.Properties
-  alias ElixirLS.LanguageServer.Plugins.Ecto.Schema
+  alias Typedef.Properties
   alias Typedef.Property
-  alias Typedef.Schema.Empty
   alias Typedef.Schema
+  alias Typedef.Empty
+  alias Typedef.Elements
 
   describe "new/0" do
     test "creates an empty schema" do
@@ -30,6 +30,27 @@ defmodule TypedefTest.SchemaTest do
       schema = schema |> Schema.add(property) |> Schema.add(property2) |> Schema.to_map()
 
       assert schema == %{"properties" => %{"firstName" => %{"type" => "string"}, "lastName" => %{"type" => "string"}}}
+    end
+
+    test "add elements property" do
+      schema = Schema.new()
+      property = Property.elements("items", "string")
+
+      schema = schema |> Schema.add(property) |> Schema.to_map()
+
+      assert schema == %{"properties" => %{"items" => %{"elements" => %{"type" => "string"}}}}
+    end
+
+    test "add elements property to an non empty schema" do
+      schema = Schema.new()
+      property = Property.simple("firstName", "string")
+      property2 = Property.elements("items", "string")
+
+      schema = schema |> Schema.add(property) |> Schema.add(property2) |> Schema.to_map()
+
+      assert schema == %{
+               "properties" => %{"firstName" => %{"type" => "string"}, "items" => %{"elements" => %{"type" => "string"}}}
+             }
     end
   end
 end
