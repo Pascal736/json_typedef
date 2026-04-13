@@ -1,4 +1,6 @@
 defmodule Typedef.Property do
+  alias Typedef.Property
+  alias Typedef.Properties
   alias Typedef.Simple
   alias Typedef.Elements
 
@@ -15,6 +17,14 @@ defmodule Typedef.Property do
 
   def property(name, %__MODULE__{} = property) when is_binary(name) do
     %__MODULE__{name: name, value: property}
+  end
+
+  def update(%__MODULE__{value: %Property{}}, %Property{} = prop) do
+    %__MODULE__{name: prop.name, value: prop}
+  end
+
+  def update(%__MODULE__{value: %Properties{}} = old, %Property{} = prop, path) when is_list(path) do
+    %__MODULE__{name: prop.name, value: prop}
   end
 
   def to_map(%__MODULE__{} = property, acc \\ %{}) do

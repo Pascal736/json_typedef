@@ -3,7 +3,6 @@ defmodule Typedef.Schema do
   alias Typedef.Property
   alias Typedef.Empty
   alias Typedef.Simple
-  alias Typedef.Elements
 
   defstruct [:inner]
 
@@ -14,14 +13,22 @@ defmodule Typedef.Schema do
   end
 
   def add(%__MODULE__{inner: %Empty{}} = schema, %Property{} = prop) do
-    %{schema | inner: %Properties{properties: [prop]}}
+    %{schema | inner: %Properties{properties: %{prop.name => prop}}}
   end
 
   def add(%__MODULE__{inner: %Properties{properties: existing}} = schema, %Property{} = prop) do
-    %{schema | inner: %Properties{properties: [prop | existing]}}
+    %{schema | inner: %Properties{properties: Map.put(existing, prop.name, prop)}}
   end
 
   def add(%__MODULE__{inner: %Simple{}}, %Property{}) do
     {:error, :cannot_add_property_to_simple_schema}
+  end
+
+  def update(%__MODULE__{inner: %Properties{} = props} = schema, %Property{} = prop) do
+    %{schema | inner: Properties.update(props, prop)}
+  end
+
+  def update(%__MODULE__{inner: %Properties{} = props} = schema, %Property{} = prop, path) when is_list(path) do
+    %{schema | inner: Properties.update(props, prop, path)}
   end
 end
