@@ -7,7 +7,7 @@ defmodule TypedefTest.SchemaTest do
   alias Typedef.Elements
 
   describe "new/0" do
-    test "creates an empty schema" do
+    test "adds an empty schema" do
       assert %Schema{inner: %Empty{}} == Schema.new()
     end
   end
@@ -65,6 +65,52 @@ defmodule TypedefTest.SchemaTest do
       schema = schema |> Schema.add(property) |> Schema.to_map()
 
       assert schema == %{"properties" => %{"nestedNode" => %{"properties" => %{"firstName" => %{"type" => "string"}}}}}
+      assert :ok = Typedef.valid_schema!(schema)
+    end
+  end
+
+  describe "add/3" do
+    test "adds a property in a nested container" do
+      schema =
+        Schema.new()
+        |> Schema.add(Property.property("node", Property.simple("firstName", "string")))
+        |> Schema.add(Property.simple("lastName", "string"), ["node"])
+        |> Schema.to_map()
+
+      assert schema == %{
+               "properties" => %{
+                 "node" => %{
+                   "properties" => %{
+                     "firstName" => %{"type" => "string"},
+                     "lastName" => %{"type" => "string"}
+                   }
+                 }
+               }
+             }
+
+      assert :ok = Typedef.valid_schema!(schema)
+    end
+
+    test "adds a property in a deeply nested container" do
+      schema =
+        Schema.new()
+        |> Schema.add(Property.property("level2", Property.simple("a", "string")))
+        |> Schema.add(Property.simple("b", "string"), ["level2"])
+        |> Schema.add(Property.simple("c", "string"), ["level2"])
+        |> Schema.to_map()
+
+      assert schema == %{
+               "properties" => %{
+                 "level2" => %{
+                   "properties" => %{
+                     "a" => %{"type" => "string"},
+                     "b" => %{"type" => "string"},
+                     "c" => %{"type" => "string"}
+                   }
+                 }
+               }
+             }
+
       assert :ok = Typedef.valid_schema!(schema)
     end
   end

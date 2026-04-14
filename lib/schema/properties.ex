@@ -29,6 +29,28 @@ defmodule Typedef.Properties do
     end
   end
 
+  def add(%__MODULE__{properties: props} = properties_struct, %Property{} = prop, [key]) when is_binary(key) do
+    case Map.get(props, key) do
+      %Property{value: %__MODULE__{properties: nested_props}} = parent ->
+        updated_value = %__MODULE__{properties: Map.put(nested_props, prop.name, prop)}
+        %{properties_struct | properties: Map.put(props, key, %{parent | value: updated_value})}
+
+      _ ->
+        {:error, :path_not_found}
+    end
+  end
+
+  def add(%__MODULE__{properties: props} = properties_struct, %Property{} = prop, [head | tail]) when is_binary(head) do
+    case Map.get(props, head) do
+      %Property{value: %__MODULE__{} = nested} = parent ->
+        updated = add(nested, prop, tail)
+        %{properties_struct | properties: Map.put(props, head, %{parent | value: updated})}
+
+      _ ->
+        {:error, :path_not_found}
+    end
+  end
+
   def delete(%__MODULE__{properties: props}, name) when is_binary(name) do
     %__MODULE__{properties: Map.delete(props, name)}
   end
