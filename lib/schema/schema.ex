@@ -9,12 +9,20 @@ defmodule Typedef.Schema do
 
   def new(), do: %__MODULE__{inner: %Empty{}}
 
+  def type(type) when is_binary(type) do
+    %__MODULE__{inner: %Type{type: type}}
+  end
+
   def values(type) when is_binary(type) do
     %__MODULE__{inner: %Values{value_schema: %Type{type: type}}}
   end
 
   def to_map(%__MODULE__{inner: %Properties{} = props}) do
     Properties.to_map(props)
+  end
+
+  def to_map(%__MODULE__{inner: %Type{type: type}}) do
+    %{"type" => type}
   end
 
   def to_map(%__MODULE__{inner: %Values{value_schema: %Type{type: type}}}) do

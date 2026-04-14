@@ -12,6 +12,15 @@ defmodule TypedefTest.SchemaTest do
     end
   end
 
+  describe "type/1" do
+    test "creates a root type schema" do
+      schema = Schema.type("string") |> Schema.to_map()
+
+      assert schema == %{"type" => "string"}
+      assert :ok = Typedef.valid_schema!(schema)
+    end
+  end
+
   describe "values/1" do
     test "creates a root values schema" do
       schema = Schema.values("string") |> Schema.to_map()
