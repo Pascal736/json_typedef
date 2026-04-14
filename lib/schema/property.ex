@@ -1,5 +1,4 @@
 defmodule Typedef.Property do
-  alias Typedef.Property
   alias Typedef.Properties
   alias Typedef.Simple
   alias Typedef.Elements
@@ -7,7 +6,6 @@ defmodule Typedef.Property do
   defstruct [:name, :value]
 
   def simple(name, type) when is_binary(name) and is_binary(type) do
-    # TODO: Type check
     %__MODULE__{name: name, value: %Simple{type: type}}
   end
 
@@ -15,12 +13,8 @@ defmodule Typedef.Property do
     %__MODULE__{name: name, value: %Elements{type: type}}
   end
 
-  def property(name, %__MODULE__{} = property) when is_binary(name) do
-    %__MODULE__{name: name, value: property}
-  end
-
-  def update(%__MODULE__{value: %Property{}}, %Property{} = prop) do
-    %__MODULE__{name: prop.name, value: prop}
+  def property(name, %__MODULE__{} = child) when is_binary(name) do
+    %__MODULE__{name: name, value: %Properties{properties: %{child.name => child}}}
   end
 
   def to_map(%__MODULE__{} = property, acc \\ %{}) do
@@ -35,7 +29,7 @@ defmodule Typedef.Property do
     Map.put(acc, name, %{"elements" => %{"type" => type}})
   end
 
-  defp parse_property(%__MODULE__{name: name, value: %__MODULE__{} = prop}, acc) do
-    Map.put(acc, name, %{"properties" => parse_property(prop, %{})})
+  defp parse_property(%__MODULE__{name: name, value: %Properties{} = props}, acc) do
+    Map.put(acc, name, Properties.to_map(props))
   end
 end
