@@ -69,6 +69,44 @@ defmodule TypedefTest.SchemaTest do
     end
   end
 
+  describe "delete/2" do
+    test "deletes a root property" do
+      schema =
+        Schema.new()
+        |> Schema.add(Property.simple("firstName", "string"))
+        |> Schema.add(Property.simple("lastName", "string"))
+        |> Schema.delete("firstName")
+        |> Schema.to_map()
+
+      assert schema == %{"properties" => %{"lastName" => %{"type" => "string"}}}
+      assert :ok = Typedef.valid_schema!(schema)
+    end
+
+    test "deletes a nested property" do
+      schema =
+        Schema.new()
+        |> Schema.add(Property.property("node", Property.simple("firstName", "string")))
+        |> Schema.delete("firstName", ["node"])
+        |> Schema.to_map()
+
+      assert schema == %{"properties" => %{"node" => %{"properties" => %{}}}}
+    end
+
+    test "deletes a deeply nested property" do
+      schema =
+        Schema.new()
+        |> Schema.add(Property.property("level3", Property.property("level2", Property.simple("level1", "string"))))
+        |> Schema.delete("level1", ["level3", "level2"])
+        |> Schema.to_map()
+
+      assert schema == %{
+               "properties" => %{
+                 "level3" => %{"properties" => %{"level2" => %{"properties" => %{}}}}
+               }
+             }
+    end
+  end
+
   describe "update/3" do
     test "updates property field on root node" do
       schema = Schema.new()

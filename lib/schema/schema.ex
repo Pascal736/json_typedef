@@ -19,7 +19,15 @@ defmodule Typedef.Schema do
     %{schema | inner: %Properties{properties: Map.put(existing, prop.name, prop)}}
   end
 
-def update(%__MODULE__{inner: %Properties{} = props} = schema, %Property{} = prop) do
+  def delete(%__MODULE__{inner: %Properties{} = props} = schema, name) when is_binary(name) do
+    %{schema | inner: Properties.delete(props, name)}
+  end
+
+  def delete(%__MODULE__{inner: %Properties{} = props} = schema, name, path) when is_binary(name) and is_list(path) do
+    %{schema | inner: Properties.delete(props, name, path)}
+  end
+
+  def update(%__MODULE__{inner: %Properties{} = props} = schema, %Property{} = prop) do
     %{schema | inner: Properties.update(props, prop)}
   end
 

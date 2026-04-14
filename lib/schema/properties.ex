@@ -29,6 +29,32 @@ defmodule Typedef.Properties do
     end
   end
 
+  def delete(%__MODULE__{properties: props}, name) when is_binary(name) do
+    %__MODULE__{properties: Map.delete(props, name)}
+  end
+
+  def delete(%__MODULE__{properties: props} = properties_struct, name, [key]) when is_binary(name) do
+    case Map.get(props, key) do
+      %Property{value: %__MODULE__{} = nested} = parent ->
+        updated = delete(nested, name)
+        %{properties_struct | properties: Map.put(props, key, %{parent | value: updated})}
+
+      _ ->
+        {:error, :path_not_found}
+    end
+  end
+
+  def delete(%__MODULE__{properties: props} = properties_struct, name, [head | tail]) when is_binary(name) do
+    case Map.get(props, head) do
+      %Property{value: %__MODULE__{} = nested} = parent ->
+        updated = delete(nested, name, tail)
+        %{properties_struct | properties: Map.put(props, head, %{parent | value: updated})}
+
+      _ ->
+        {:error, :path_not_found}
+    end
+  end
+
   def to_map(%__MODULE__{properties: properties}, acc \\ %{}) do
     props =
       Enum.reduce(properties, acc, fn {_key, property}, current_acc ->
