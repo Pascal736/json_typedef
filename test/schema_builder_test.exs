@@ -12,6 +12,15 @@ defmodule TypedefTest.SchemaTest do
     end
   end
 
+  describe "values/1" do
+    test "creates a root values schema" do
+      schema = Schema.values("string") |> Schema.to_map()
+
+      assert schema == %{"values" => %{"type" => "string"}}
+      assert :ok = Typedef.valid_schema!(schema)
+    end
+  end
+
   describe "add/2" do
     test "adds a new property to an empty schema" do
       schema = Schema.new()
@@ -41,6 +50,16 @@ defmodule TypedefTest.SchemaTest do
       schema = schema |> Schema.add(property) |> Schema.to_map()
 
       assert schema == %{"properties" => %{"items" => %{"elements" => %{"type" => "string"}}}}
+    end
+
+    test "adds values property" do
+      schema =
+        Schema.new()
+        |> Schema.add(Property.values("scores", "uint32"))
+        |> Schema.to_map()
+
+      assert schema == %{"properties" => %{"scores" => %{"values" => %{"type" => "uint32"}}}}
+      assert :ok = Typedef.valid_schema!(schema)
     end
 
     test "adds elements property to an non empty schema" do
