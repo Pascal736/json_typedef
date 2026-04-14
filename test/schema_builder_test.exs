@@ -60,7 +60,7 @@ defmodule TypedefTest.SchemaTest do
 
       schema = schema |> Schema.add(property) |> Schema.to_map()
 
-      assert schema == %{"properties" => %{"nestedNode" => %{"firstName" => %{"type" => "string"}}}}
+      assert schema == %{"properties" => %{"nestedNode" => %{"properties" => %{"firstName" => %{"type" => "string"}}}}}
     end
   end
 
@@ -88,9 +88,23 @@ defmodule TypedefTest.SchemaTest do
       schema = schema |> Schema.add(property)
 
       updated_property = Property.simple("firstName", "boolean")
-      schema = schema |> Schema.update(updated_property, ["nestedNode"]) |> dbg |> Schema.to_map()
+      schema = schema |> Schema.update(updated_property, ["nestedNode"]) |> Schema.to_map()
 
-      assert schema == %{"properties" => %{"nestedNode" => %{"firstName" => %{"type" => "boolean"}}}}
+      assert schema == %{"properties" => %{"nestedNode" => %{"properties" => %{"firstName" => %{"type" => "boolean"}}}}}
+    end
+
+    test "updates deeply nested property" do
+      schema = Schema.new()
+      property1 = Property.simple("level1", "string")
+      property2 = Property.property("level2", property1)
+      property2 = Property.property("level3", property2)
+
+      schema = schema |> Schema.add(property2)
+
+      updated_property = Property.simple("newLevel1", "boolean")
+      schema = schema |> Schema.update(updated_property, ["level3", "level2"]) |> Schema.to_map()
+
+      assert schema == %{"properties" => %{"level3" => %{"properties" => %{"level2" => %{"properties" => %{"newLevel1" => %{"type" => "boolean"}}}}}}}
     end
   end
 end

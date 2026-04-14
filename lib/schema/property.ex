@@ -23,10 +23,6 @@ defmodule Typedef.Property do
     %__MODULE__{name: prop.name, value: prop}
   end
 
-  def update(%__MODULE__{value: %Properties{}} = old, %Property{} = prop, path) when is_list(path) do
-    %__MODULE__{name: prop.name, value: prop}
-  end
-
   def to_map(%__MODULE__{} = property, acc \\ %{}) do
     parse_property(property, acc)
   end
@@ -40,6 +36,6 @@ defmodule Typedef.Property do
   end
 
   defp parse_property(%__MODULE__{name: name, value: %__MODULE__{} = prop}, acc) do
-    Map.put(acc, name, parse_property(prop, acc))
+    Map.put(acc, name, %{"properties" => parse_property(prop, %{})})
   end
 end
