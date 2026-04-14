@@ -120,5 +120,17 @@ defmodule TypedefTest.SchemaTest do
 
       assert :ok = Typedef.valid_schema!(schema)
     end
+
+    test "updates element property" do
+      schema = Schema.new()
+      property = Property.elements("items", "string")
+      schema = Schema.add(schema, property)
+
+      updated_property = Property.elements("items", "boolean")
+      schema = schema |> Schema.update(updated_property) |> Schema.to_map()
+
+      assert schema == %{"properties" => %{"items" => %{"elements" => %{"type" => "boolean"}}}}
+      assert :ok = Typedef.valid_schema!(schema)
+    end
   end
 end
