@@ -20,6 +20,7 @@ defmodule TypedefTest.SchemaTest do
       schema = schema |> Schema.add(property) |> Schema.to_map()
 
       assert schema == %{"properties" => %{"firstName" => %{"type" => "string"}}}
+      assert :ok = Typedef.valid_schema!(schema)
     end
 
     test "adds a new property to an non empty schema" do
@@ -30,6 +31,7 @@ defmodule TypedefTest.SchemaTest do
       schema = schema |> Schema.add(property) |> Schema.add(property2) |> Schema.to_map()
 
       assert schema == %{"properties" => %{"firstName" => %{"type" => "string"}, "lastName" => %{"type" => "string"}}}
+      assert :ok = Typedef.valid_schema!(schema)
     end
 
     test "adds elements property" do
@@ -51,6 +53,8 @@ defmodule TypedefTest.SchemaTest do
       assert schema == %{
                "properties" => %{"firstName" => %{"type" => "string"}, "items" => %{"elements" => %{"type" => "string"}}}
              }
+
+      assert :ok = Typedef.valid_schema!(schema)
     end
 
     test "adds a nested property to property" do
@@ -61,6 +65,7 @@ defmodule TypedefTest.SchemaTest do
       schema = schema |> Schema.add(property) |> Schema.to_map()
 
       assert schema == %{"properties" => %{"nestedNode" => %{"properties" => %{"firstName" => %{"type" => "string"}}}}}
+      assert :ok = Typedef.valid_schema!(schema)
     end
   end
 
@@ -78,6 +83,8 @@ defmodule TypedefTest.SchemaTest do
       assert schema == %{
                "properties" => %{"firstName" => %{"type" => "boolean"}, "items" => %{"elements" => %{"type" => "string"}}}
              }
+
+      assert :ok = Typedef.valid_schema!(schema)
     end
 
     test "updates nested property field" do
@@ -91,6 +98,7 @@ defmodule TypedefTest.SchemaTest do
       schema = schema |> Schema.update(updated_property, ["nestedNode"]) |> Schema.to_map()
 
       assert schema == %{"properties" => %{"nestedNode" => %{"properties" => %{"firstName" => %{"type" => "boolean"}}}}}
+      assert :ok = Typedef.valid_schema!(schema)
     end
 
     test "updates deeply nested property" do
@@ -104,7 +112,13 @@ defmodule TypedefTest.SchemaTest do
       updated_property = Property.simple("newLevel1", "boolean")
       schema = schema |> Schema.update(updated_property, ["level3", "level2"]) |> Schema.to_map()
 
-      assert schema == %{"properties" => %{"level3" => %{"properties" => %{"level2" => %{"properties" => %{"newLevel1" => %{"type" => "boolean"}}}}}}}
+      assert schema == %{
+               "properties" => %{
+                 "level3" => %{"properties" => %{"level2" => %{"properties" => %{"newLevel1" => %{"type" => "boolean"}}}}}
+               }
+             }
+
+      assert :ok = Typedef.valid_schema!(schema)
     end
   end
 end

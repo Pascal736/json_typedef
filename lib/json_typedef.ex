@@ -10,6 +10,8 @@ defmodule Typedef do
   @spec valid_schema?(schema()) :: schema_validation_result()
   defdelegate valid_schema?(schema), to: Typedef.ValidSchema
 
+  defdelegate valid_schema!(schema), to: Typedef.ValidSchema
+
   @external_resource "README.md"
   @moduledoc "README.md"
              |> File.read!()

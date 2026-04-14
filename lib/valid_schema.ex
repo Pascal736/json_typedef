@@ -21,6 +21,14 @@ defmodule Typedef.ValidSchema do
     end
   end
 
+  @spec valid_schema?(map()) :: :ok
+  def valid_schema!(schema) when is_map(schema) do
+    case internal_valid_schema?(schema, :root, %{}) do
+      true -> :ok
+      false -> raise "Invalid schema"
+    end
+  end
+
   defp internal_valid_schema?(%{"definitions" => defs} = schema, :root, refs)
        when is_map(defs) do
     new_refs = Map.merge(refs, defs)
